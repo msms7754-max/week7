@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dear Future Me — 웹 타임캡슐 (Soft)</title>
+<style>
+  /* ===== Soft / Rounded Theme ===== */
+  :root{
+    --bg1:#f7f9ff; --bg2:#eef5ff;
+    --text:#1b2242; --muted:#6b78a6;
+    --card:#ffffff; --border:#e4e9ff;
+    --accent:#89b6ff; --accent2:#9fe0c8;
+    --warn:#f5c86b; --danger:#ef8da2;
+    --shadow:0 10px 30px rgba(80,115,215,.12);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(137,182,255,.25), transparent),
+      radial-gradient(900px 700px at 10% 110%, rgba(159,224,200,.18), transparent),
+      linear-gradient(180deg,#cfe6ff 0%, #e3f1ff 40%, #f6fbff 70%, #f0f6ff 100%);
+    color:var(--text);
+    font:16px/1.6 ui-rounded, "SF Pro Rounded", "Apple SD Gothic Neo", "Noto Sans KR", Pretendard, "Segoe UI", system-ui, sans-serif;
+    letter-spacing:.1px;
+    display:grid; grid-template-rows:auto auto 1fr; gap:14px;
+  }
+  header{padding:28px 16px 16px; border-bottom:1px solid var(--border); position:relative; z-index:1}
+  header h1{
+    margin:0;
+    font-size:28px; line-height:1.2; text-align:center;
+    font-weight:800; letter-spacing:.2px;
+  }
+  header p{margin:8px auto 0; color:var(--muted); font-size:14px; text-align:center; max-width:720px}
+  .wrap{padding:16px; display:grid; grid-template-columns:380px 1fr; gap:18px; position:relative; z-index:1}
+  @media (max-width: 900px){ .wrap{grid-template-columns:1fr} }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+    box-shadow:var(--shadow), 0 2px 0 rgba(110,166,255,.08) inset;
+  }
+  label{font-weight:700; font-size:13px; color:#3a4570}
+  textarea, input[type="date"], input[type="text"]{
+    width:100%; margin-top:8px; padding:13px 14px; border-radius:14px;
+    background:#fbfcff; color:var(--text); border:1px solid var(--border); outline:none;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  textarea:focus, input:focus{ border-color:#cfd8ff; box-shadow:0 0 0 6px rgba(137,182,255,.15)}
+  textarea{min-height:140px; resize:vertical; border-radius:16px}
+  .row{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap}
+  button{
+    appearance:none; border:none; cursor:pointer; padding:11px 16px; border-radius:999px;
+    background:linear-gradient(180deg,var(--accent), #6ea6ff); color:white; font-weight:800;
+    transition:transform .08s ease, box-shadow .2s ease;
+    box-shadow:0 8px 20px rgba(110,166,255,.28);
+  }
+  button:hover{ transform:translateY(-1px) }
+  button:active{ transform:translateY(0) scale(.99) }
+  button.secondary{
+    background:#f4f7ff; color:#415094; border:1px solid var(--border);
+    box-shadow:none; font-weight:700;
+  }
+  .list{display:grid; gap:12px}
+  .capsule{
+    display:grid; grid-template-columns:72px 1fr auto; gap:12px; align-items:center;
+    background:#fbfcff; border:1px solid var(--border); border-radius:18px; padding:14px;
+    box-shadow:var(--shadow);
+    transition:transform .12s ease, box-shadow .2s ease, background-color .2s ease
+  }
+  .capsule:hover{ transform:translateY(-2px); box-shadow:0 14px 34px rgba(110,166,255,.18) }
+  .stamp{
+    width:72px; height:72px; position:relative; display:grid; place-items:center; border-radius:14px;
+    background:repeating-linear-gradient(45deg,rgba(137,182,255,.22) 0 6px, rgba(159,224,200,.20) 6px 12px);
+    border:1px solid var(--border);
+  }
+  .stamp.locked::after{
+    content:"LOCKED"; color:#5670b3; font-size:10px; letter-spacing:2px;
+    position:absolute; bottom:6px; background:#eef3ff; padding:2px 6px; border-radius:999px; border:1px solid var(--border);
+  }
+  .stamp.unlocked::after{
+    content:"OPEN"; color:#2c6b57; font-size:10px; letter-spacing:2px;
+    position:absolute; bottom:6px; background:#e9fbf3; padding:2px 6px; border-radius:999px; border:1px solid #c8f1e2;
+  }
+  .capsule h4{margin:0 0 2px; font-size:16px}
+  .capsule p{margin:0; color:#5b6697; font-size:13px; max-height:3.2em; overflow:hidden}
+  .capsule .meta{color:#7a87b4; font-size:12px}
+  .capsule .actions{display:flex; gap:8px}
+  .pill{padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:#f4f7ff; color:#435094; font-weight:700}
+  .empty{color:#8390c0; text-align:center; padding:24px; border:1px dashed var(--border); border-radius:14px; background:#fbfcff}
+
+  /* ===== Floating Letters Background ===== */
+  .bg-letters{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0 }
+  .letter-wrap{ position:absolute; bottom:-25vh; left:0; width:0; height:0; animation:sway var(--durY,18s) ease-in-out infinite alternate; will-change: transform }
+  .letter{
+    position:absolute; left:0; bottom:0;
+    width:var(--size,48px); height:calc(var(--size,48px) * .72);
+    background:#ffffff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:0 10px 30px rgba(80,115,215,.14);
+    opacity:var(--op,.9);
+    transform-origin:50% 50%;
+    filter:blur(var(--blur,0px));
+    animation:floatY var(--durY,18s) linear infinite, tilt calc(var(--durY,18s) * 0.8) ease-in-out infinite alternate;
+    animation-delay:var(--delay,0s);
+  }
+  .letter::before{
+    content:""; position:absolute; left:0; right:0; top:0; height:58%;
+    background:linear-gradient(180deg,#f9fbff,#ffffff);
+    clip-path:polygon(0 0, 100% 0, 50% 86%);
+    border-bottom:1px solid #e6ecff;
+  }
+  .letter::after{
+    content:""; position:absolute; left:8px; right:8px; bottom:8px; top:46%;
+    background:
+      linear-gradient(135deg,#e3eaff 0 10px, transparent 10px) left bottom/50% 100% no-repeat,
+      linear-gradient(225deg,#e3eaff 0 10px, transparent 10px) right bottom/50% 100% no-repeat;
+  }
+  @keyframes floatY{ from{ transform:translate(-50%, 105vh) } to{ transform:translate(-50%, -20vh) } }
+  @keyframes sway{ from{ transform:translateX(calc(var(--x,50%) - 20px)) } to{ transform:translateX(calc(var(--x,50%) + var(--sway,18px))) } }
+  @keyframes tilt{ from{ rotate:-6deg } to{ rotate:6deg } }
+  @media (prefers-reduced-motion: reduce){
+    .letter-wrap, .letter{ animation-duration:50s; animation-iteration-count:infinite }
+    .letter{ animation:floatY 50s linear infinite }
+  }
+
+  /* small polish for mobile spacing */
+  @media (max-width: 600px){
+    header{ padding:22px 12px 12px }
+    .wrap{ padding:12px; gap:12px }
+    .capsule{ grid-template-columns:56px 1fr auto; border-radius:16px }
+    .stamp{ width:56px; height:56px; border-radius:12px }
+  }
+</style>
+</head>
+<body>
+<div class="bg-letters" aria-hidden="true"></div>
+<header>
+  <h1>Dear Future Me — 웹 타임캡슐</h1>
+  <p>오늘의 내가 미래의 나에게 보내는 편지. 지정한 날짜(오늘 포함)가 오면 자동으로 ‘개봉’됩니다.</p>
+</header>
+
+<section class="wrap">
+  <div class="card">
+    <label>제목</label>
+    <input id="title" type="text" placeholder="예) 2026년의 나에게"/>
+    <label style="margin-top:10px">메시지</label>
+    <textarea id="msg" placeholder="미래의 나야, 요즘 어떻게 지내?"></textarea>
+    <label style="margin-top:10px">개봉일</label>
+    <input id="openDate" type="date"/>
+    <div class="row">
+      <button id="save" type="button">타임캡슐 저장</button>
+      <button id="clear" type="button" class="secondary">모두 삭제</button>
+    </div>
+    <p class="pill" id="info">상태: -</p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 12px">내 타임캡슐</h3>
+    <div id="list" class="list"></div>
+    <div id="empty" class="empty">아직 만든 캡슐이 없어요. 첫 편지를 작성해보세요!</div>
+  </div>
+</section>
+
+<script>
+  // ---------- Helpers ----------
+  const $ = sel => document.querySelector(sel);
+  const listEl = $('#list'), emptyEl = $('#empty'), info = $('#info');
+  const KEY = 'timecapsules_v1';
+  const bgContainer = document.querySelector('.bg-letters');
+
+  // ---------- Letters ----------
+  function createLetters(count){
+    if(!bgContainer) return;
+    const total = Math.min(count, 44);
+    const vw = Math.max(window.innerWidth, 320);
+    for(let i=0;i<total;i++){
+      const wrap = document.createElement('div');
+      wrap.className = 'letter-wrap';
+      const colX = (i + 0.5) / total; // 균등 분포의 기준점
+      const jitter = (Math.random()-0.5) * (vw/total); // 살짝 흔들림
+      const x = Math.round(colX * vw + jitter);
+      const sway = 12 + Math.random()*24;
+      const size = 26 + Math.random()*42; // 26-68px
+      const dur = 14 + Math.random()*16;  // 14-30s (빠르게)
+      const delay = Math.random()<0.6 ? (-Math.random()*dur) : 0; // 일부는 즉시 화면 안에서 시작
+      wrap.style.setProperty('--x', x+'px');
+      wrap.style.setProperty('--sway', sway+'px');
+      wrap.style.setProperty('--durY', dur+'s');
+      wrap.style.setProperty('--delay', delay+'s');
+      const letter = document.createElement('div');
+      letter.className = 'letter';
+      letter.style.setProperty('--size', size+'px');
+      const blur = Math.random()<0.25 ? (Math.random()*1.6).toFixed(2) : (Math.random()*0.6).toFixed(2);
+      const op = 0.7 + Math.random()*0.25;
+      letter.style.setProperty('--blur', blur+'px');
+      letter.style.setProperty('--op', op.toFixed(2));
+      wrap.appendChild(letter);
+      bgContainer.appendChild(wrap);
+    }
+  }
+
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // 항상 최소 개수는 생성 (감속만 적용)
+  function mountLetters(){
+    const base = Math.round((window.innerWidth||1024)/90);
+    const minCount = prefersReduced ? 14 : 20;
+    const count = Math.min(44, Math.max(minCount, base));
+    createLetters(count);
+  }
+  mountLetters();
+  window.addEventListener('resize', ()=>{
+    if(!bgContainer) return;
+    bgContainer.innerHTML = '';
+    mountLetters();
+  }, { passive:true });
+
+  function todayLocalISO(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const da = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${da}`;
+  }
+
+  function getOpenDateISO(){
+    const input = document.getElementById('openDate');
+    if('valueAsDate' in input && input.valueAsDate instanceof Date && !isNaN(input.valueAsDate)){
+      const d = input.valueAsDate;
+      const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), da = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${da}`;
+    }
+    const raw = (input.value || '').trim();
+    if(!raw) return '';
+    if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    const m = raw.match(/^(\d{4})\.\s?(\d{1,2})\.\s?(\d{1,2})\.?$/);
+    if(m){
+      const y = m[1], mm = String(m[2]).padStart(2,'0'), dd = String(m[3]).padStart(2,'0');
+      return `${y}-${mm}-${dd}`;
+    }
+    const d2 = new Date(raw);
+    if(!isNaN(d2)){
+      const y = d2.getFullYear(), mm = String(d2.getMonth()+1).padStart(2,'0'), dd = String(d2.getDate()).padStart(2,'0');
+      return `${y}-${mm}-${dd}`;
+    }
+    return '';
+  }
+
+  function canUseLocalStorage(){
+    try{ const x='__tc_test__'; localStorage.setItem(x,'1'); localStorage.removeItem(x); return true; }catch(e){ return false; }
+  }
+
+  function escapeHtml(s=''){
+    return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+  }
+
+  function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||[] } catch(e){ return [] } }
+  function saveAll(all){ localStorage.setItem(KEY, JSON.stringify(all)) }
+
+  function render(){
+    const all = load().sort((a,b)=> a.open.localeCompare(b.open));
+    listEl.innerHTML = '';
+    emptyEl.style.display = all.length? 'none':'block';
+    const today = todayLocalISO();
+    all.forEach((c,i)=>{
+      const unlocked = c.open <= today;
+      const div = document.createElement('div');
+      div.className = 'capsule';
+      div.innerHTML = `
+        <div class="stamp ${unlocked?'unlocked':'locked'}"><span style="font-size:28px">${unlocked?'📬':'🔒'}</span></div>
+        <div>
+          <h4>${escapeHtml(c.title||'제목 없음')}</h4>
+          <div class="meta">개봉일: ${c.open}</div>
+          <p>${unlocked? escapeHtml(c.msg) : '개봉일이 되면 편지가 열립니다.'}</p>
+        </div>
+        <div class="actions">
+          <button data-act="open" data-i="${i}" class="secondary" type="button">${unlocked?'공유':'미리보기'}</button>
+          <button data-act="del" data-i="${i}" class="secondary" type="button">삭제</button>
+        </div>
+      `;
+      listEl.appendChild(div);
+    });
+  }
+
+  function addCapsule(title,msg,open){
+    const all = load();
+    all.push({title,msg,open, created: todayLocalISO()});
+    saveAll(all); render();
+  }
+
+  // ---------- Events ----------
+  $('#save').addEventListener('click', ()=>{
+    try{
+      if(!canUseLocalStorage()){
+        info.textContent = '상태: 이 브라우저 모드에서는 저장공간(localStorage)을 사용할 수 없어요.';
+        info.style.color = '#a33'; return;
+      }
+      const title = $('#title').value.trim();
+      const msg = $('#msg').value.trim();
+      const openISO = getOpenDateISO();
+      if(!msg || !openISO){
+        info.textContent = '상태: 메시지와 개봉일을 입력해주세요.';
+        info.style.color = '#a33'; return;
+      }
+      if(openISO < todayLocalISO()){
+        info.textContent = '상태: 개봉일은 오늘 또는 이후여야 합니다.';
+        info.style.color = '#b8840a'; return;
+      }
+      addCapsule(title, msg, openISO);
+      info.textContent = '상태: 저장되었습니다!';
+      info.style.color = '#1a7c54';
+      $('#title').value=''; $('#msg').value=''; $('#openDate').value='';
+    }catch(e){
+      info.textContent = '상태: 저장 중 오류 - ' + e.message;
+      info.style.color = '#a33';
+    }
+  });
+
+  $('#clear').addEventListener('click', ()=>{
+    try{
+      if(confirm('정말 모두 삭제할까요?')){
+        localStorage.removeItem(KEY); render();
+      }
+    }catch(e){
+      info.textContent = '상태: 삭제 중 오류 - ' + e.message;
+      info.style.color = '#a33';
+    }
+  });
+
+  // (삭제됨) 다운로드 버튼 핸들러
+
+  listEl.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button'); if(!btn) return;
+    const i = +btn.dataset.i; const act = btn.dataset.act;
+    const all = load();
+    if(act==='del'){ all.splice(i,1); saveAll(all); render(); return; }
+    if(act==='open'){
+      const c = all[i]; const unlocked = c.open <= todayLocalISO();
+      if(!unlocked){
+        alert('아직 개봉일이 아닙니다!');
+      }else{
+        navigator.clipboard.writeText(c.msg).then(()=>alert('편지 내용이 복사되었어요.'));
+      }
+    }
+  });
+
+  // init
+  render();
+</script>
+</body>
+</html>
